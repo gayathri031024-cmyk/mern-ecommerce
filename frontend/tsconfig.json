@@ -1,0 +1,78 @@
+{
+  "compilerOptions": {
+<<<<<<< HEAD
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+=======
+    /* Language & Environment */
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+
+    /* Output */
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "sourceMap": true,
+    "removeComments": true,
+
+    /* Strictness */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Interop */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+
+    /* Paths (clean imports) */
+    "baseUrl": "./src",
+    "paths": {
+      "@config/*": ["config/*"],
+      "@controllers/*": ["controllers/*"],
+      "@models/*": ["models/*"],
+      "@routes/*": ["routes/*"],
+      "@middlewares/*": ["middlewares/*"],
+      "@services/*": ["services/*"],
+      "@utils/*": ["utils/*"],
+      "@validators/*": ["validators/*"],
+      "@types/*": ["types/*"],
+      "@constants/*": ["constants/*"]
+    },
+
+    /* Emit */
+    "declaration": false,
+    "incremental": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
+>>>>>>> bfea368bc13d06ff4a5284448bc03d74e9a4d1c9
+}
