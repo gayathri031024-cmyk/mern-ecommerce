@@ -4,13 +4,8 @@
   "trailingComma": "all",
   "printWidth": 100,
   "tabWidth": 2,
-<<<<<<< HEAD
+  "useTabs": false,
   "arrowParens": "always",
   "endOfLine": "lf",
   "plugins": ["prettier-plugin-tailwindcss"]
-=======
-  "useTabs": false,
-  "arrowParens": "always",
-  "endOfLine": "lf"
->>>>>>> bfea368bc13d06ff4a5284448bc03d74e9a4d1c9
 }

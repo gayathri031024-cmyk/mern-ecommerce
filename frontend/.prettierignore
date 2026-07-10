@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 node_modules
 dist
-coverage
-=======
-dist
-node_modules
 coverage
 src/uploads
 *.log
->>>>>>> bfea368bc13d06ff4a5284448bc03d74e9a4d1c9
 package-lock.json

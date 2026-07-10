@@ -3,14 +3,9 @@ node_modules/
 
 # Build output
 dist/
-<<<<<<< HEAD
 dist-ssr/
 
 # Environment
-=======
-
-# Environment variables
->>>>>>> bfea368bc13d06ff4a5284448bc03d74e9a4d1c9
 .env
 .env.local
 .env.*.local
@@ -20,7 +15,10 @@ logs/
 *.log
 npm-debug.log*
 
-<<<<<<< HEAD
+# Uploads (local dev only)
+src/uploads/*
+!src/uploads/.gitkeep
+
 # Editor
 .vscode/*
 !.vscode/extensions.json
@@ -30,27 +28,13 @@ npm-debug.log*
 *.njsproj
 *.sln
 *.sw?
-=======
-# Uploads (local dev only, real files live on Cloudinary)
-src/uploads/*
-!src/uploads/.gitkeep
->>>>>>> bfea368bc13d06ff4a5284448bc03d74e9a4d1c9
 
 # OS
 .DS_Store
 Thumbs.db
 
-<<<<<<< HEAD
-# Misc
-*.tsbuildinfo
-=======
-# IDE
-.vscode/*
-!.vscode/extensions.json
-.idea/
-
 # Testing
 coverage/
 
-# Husky (auto-managed, still commit .husky/_ is generated at install)
->>>>>>> bfea368bc13d06ff4a5284448bc03d74e9a4d1c9
+# Misc
+*.tsbuildinfo
