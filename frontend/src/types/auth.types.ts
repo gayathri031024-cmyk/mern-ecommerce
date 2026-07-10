@@ -6,6 +6,7 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  isEmailVerified?: boolean;
 }
 
 export interface LoginPayload {
@@ -32,4 +33,12 @@ export interface ResetPasswordPayload {
 export interface AuthResponse {
   user: AuthUser;
   accessToken: string;
+}
+
+export interface VerifyEmailPayload {
+  token: string;
+}
+
+export interface ResendVerificationPayload {
+  email: string;
 }
