@@ -9,9 +9,24 @@ interface EnvConfig {
   API_BASE_URL: string;
   CLIENT_URL: string;
   MONGO_URI: string;
+
+  JWT_ACCESS_SECRET: string;
+  JWT_ACCESS_EXPIRES_IN: string;
+  JWT_REFRESH_SECRET: string;
+  JWT_REFRESH_EXPIRES_IN: string;
+  COOKIE_DOMAIN: string;
+
+  SMTP_HOST: string;
+  SMTP_PORT: number;
+  SMTP_USER: string;
+  SMTP_PASSWORD: string;
+  EMAIL_FROM: string;
+
+  RATE_LIMIT_WINDOW_MS: number;
+  RATE_LIMIT_MAX_REQUESTS: number;
 }
 
-const REQUIRED_ENV_VARS = ['MONGO_URI'] as const;
+const REQUIRED_ENV_VARS = ['MONGO_URI', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'] as const;
 
 function validateEnv(): void {
   const missing = REQUIRED_ENV_VARS.filter((key) => !process.env[key]);
@@ -29,6 +44,21 @@ export const env: EnvConfig = {
   API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:5000',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   MONGO_URI: process.env.MONGO_URI as string,
+
+  JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET as string,
+  JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET as string,
+  JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+  COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || 'localhost',
+
+  SMTP_HOST: process.env.SMTP_HOST || '',
+  SMTP_PORT: Number(process.env.SMTP_PORT) || 587,
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASSWORD: process.env.SMTP_PASSWORD || '',
+  EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@ecommerce.com',
+
+  RATE_LIMIT_WINDOW_MS: Number(process.env.RATE_LIMIT_WINDOW_MS) || 900000,
+  RATE_LIMIT_MAX_REQUESTS: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
 };
 
 export const isProduction = env.NODE_ENV === 'production';
