@@ -36,4 +36,17 @@ export const authService = {
   async resetPassword(payload: ResetPasswordPayload): Promise<void> {
     await axiosInstance.post('/auth/reset-password', payload);
   },
+
+  async verifyEmail(payload: { token: string }): Promise<void> {
+    await axiosInstance.post('/auth/verify-email', payload);
+  },
+
+  async resendVerification(payload: { email: string }): Promise<void> {
+    await axiosInstance.post('/auth/resend-verification', payload);
+  },
+
+  async refresh(): Promise<{ accessToken: string }> {
+    const { data } = await axiosInstance.post<ApiSuccess<{ accessToken: string }>>('/auth/refresh');
+    return data.data;
+  },
 };

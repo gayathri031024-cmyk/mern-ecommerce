@@ -18,18 +18,40 @@ axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+/** Requests hitting these paths must never trigger the refresh-and-retry flow below,
+ * otherwise a failed refresh attempt recurses into itself. */
+const AUTH_ENDPOINTS_WITHOUT_RETRY = ['/auth/refresh', '/auth/login', '/auth/register'];
+
 let isRefreshing = false;
-let pendingQueue: Array<() => void> = [];
+let pendingQueue: Array<{
+  resolve: (value: unknown) => void;
+  reject: (reason?: unknown) => void;
+  originalRequest: InternalAxiosRequestConfig & { _retry?: boolean };
+}> = [];
+
+function settleQueue(error: unknown | null) {
+  pendingQueue.forEach(({ resolve, reject, originalRequest }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(axiosInstance(originalRequest));
+    }
+  });
+  pendingQueue = [];
+}
 
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+    const isAuthEndpoint = AUTH_ENDPOINTS_WITHOUT_RETRY.some((path) =>
+      originalRequest?.url?.includes(path),
+    );
 
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
-        return new Promise((resolve) => {
-          pendingQueue.push(() => resolve(axiosInstance(originalRequest)));
+        return new Promise((resolve, reject) => {
+          pendingQueue.push({ resolve, reject, originalRequest });
         });
       }
 
@@ -43,11 +65,11 @@ axiosInstance.interceptors.response.use(
           { withCredentials: true },
         );
         storage.set(STORAGE_KEYS.ACCESS_TOKEN, data.data.accessToken);
-        pendingQueue.forEach((resolveFn) => resolveFn());
-        pendingQueue = [];
+        settleQueue(null);
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         useAuthStore.getState().logout();
+        settleQueue(refreshError);
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

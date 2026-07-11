@@ -51,3 +51,36 @@ export async function sendPasswordResetEmail(to: string, name: string, rawToken:
   const text = `Hi ${name}, reset your password: ${resetUrl} (expires in 1 hour)`;
   await sendMail(to, subject, html, text);
 }
+
+interface OrderEmailItem {
+  title: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export async function sendOrderConfirmationEmail(
+  to: string,
+  name: string,
+  order: { orderNumber: string; total: number; items: OrderEmailItem[] },
+): Promise<void> {
+  const orderUrl = `${env.CLIENT_URL}/orders`;
+  const subject = `Order confirmed: ${order.orderNumber}`;
+  const itemsHtml = order.items
+    .map((item) => `<li>${item.quantity} × ${item.title} — $${(item.quantity * item.unitPrice).toFixed(2)}</li>`)
+    .join('');
+  const html = `<p>Hi ${name},</p><p>Thanks for your order! We're getting it ready.</p><p><strong>Order ${order.orderNumber}</strong></p><ul>${itemsHtml}</ul><p><strong>Total: $${order.total.toFixed(2)}</strong></p><p><a href="${orderUrl}">View your orders</a></p>`;
+  const text = `Hi ${name}, your order ${order.orderNumber} is confirmed. Total: $${order.total.toFixed(2)}. View it at ${orderUrl}`;
+  await sendMail(to, subject, html, text);
+}
+
+export async function sendOrderStatusUpdateEmail(
+  to: string,
+  name: string,
+  order: { orderNumber: string; status: string },
+): Promise<void> {
+  const orderUrl = `${env.CLIENT_URL}/orders`;
+  const subject = `Order ${order.orderNumber} is now ${order.status}`;
+  const html = `<p>Hi ${name},</p><p>Your order <strong>${order.orderNumber}</strong> status has been updated to <strong>${order.status}</strong>.</p><p><a href="${orderUrl}">View your orders</a></p>`;
+  const text = `Hi ${name}, order ${order.orderNumber} is now ${order.status}. View it at ${orderUrl}`;
+  await sendMail(to, subject, html, text);
+}

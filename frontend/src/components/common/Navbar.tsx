@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, Menu, ShoppingCart, User, X } from 'lucide-react';
+import { Heart, Menu, Moon, ShoppingCart, Sun, User, X } from 'lucide-react';
 
 import { SearchBar } from './SearchBar';
 import { Dropdown, DropdownItem } from '@/components/ui/Dropdown';
@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useUIStore } from '@/store/uiStore';
+import { useTheme } from '@/contexts/ThemeContext';
 import { ROUTES } from '@/utils/constants';
 
 export function Navbar() {
@@ -14,6 +15,7 @@ export function Navbar() {
   const { cart } = useCartStore();
   const { productIds } = useWishlistStore();
   const { isMobileNavOpen, toggleMobileNav } = useUIStore();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   return (
@@ -43,6 +45,15 @@ export function Navbar() {
         </div>
 
         <div className="ml-auto flex items-center gap-3 md:ml-4">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="rounded-lg p-1.5 text-ink/70 transition-colors hover:bg-ink/5 hover:text-ink"
+          >
+            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
+
           <Link to={ROUTES.WISHLIST} className="relative" aria-label="Wishlist">
             <Heart className="h-5 w-5" />
             {productIds.length > 0 && (

@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '@/lib/queryClient';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { env } from '@/config/env';
 import App from './App';
 import './index.css';
 
@@ -16,7 +17,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
           <App />
         </ToastProvider>
       </ThemeProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {env.isDev && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   </React.StrictMode>,
 );

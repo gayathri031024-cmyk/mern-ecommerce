@@ -11,10 +11,8 @@ export interface ApiSuccessResponse<T = unknown> {
     stack?: string;
   }
   
-<<<<<<< HEAD
   export type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
   
-=======
   export interface HealthCheckResponse {
     status: 'ok' | 'degraded';
     uptime: number;
@@ -22,4 +20,4 @@ export interface ApiSuccessResponse<T = unknown> {
     environment: string;
     database: { status: 'connected' | 'connecting' | 'disconnected' | 'disconnecting' };
   }
->>>>>>> bfea368bc13d06ff4a5284448bc03d74e9a4d1c9
+  

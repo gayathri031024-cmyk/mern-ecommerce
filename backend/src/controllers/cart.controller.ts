@@ -3,6 +3,7 @@ import Cart from '@models/Cart';
 import Product from '@models/Product';
 import { asyncHandler } from '@utils/asyncHandler';
 import { AppError } from '@utils/AppError';
+import { logActivity } from '@services/activity.service';
 
 async function getOrCreateCart(userId: string) {
   let cart = await Cart.findOne({ user: userId });
@@ -35,6 +36,14 @@ export const addCartItem = asyncHandler(async (req: Request, res: Response) => {
 
   await cart.save();
   await cart.populate('items.product', 'title slug images stock price');
+
+  void logActivity({
+    user: req.user!.id,
+    type: 'added_to_cart',
+    description: `Added "${product.title}" to cart`,
+    entityType: 'product',
+    entityId: product.id,
+  });
 
   res.status(200).json({ success: true, message: 'Item added to cart', data: cart });
 });

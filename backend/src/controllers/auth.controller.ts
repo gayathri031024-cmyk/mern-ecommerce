@@ -12,6 +12,7 @@ import {
   durationToMs,
 } from '@services/token.service';
 import { sendVerificationEmail, sendPasswordResetEmail } from '@services/email.service';
+import { logActivity } from '@services/activity.service';
 
 const REFRESH_COOKIE_NAME = 'refreshToken';
 const REFRESH_COOKIE_PATH = '/api/auth';
@@ -78,6 +79,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const accessToken = await issueSession(res, user);
+
+  void logActivity({ user: user.id, type: 'logged_in', description: 'Signed in' });
 
   res.status(200).json({
     success: true,

@@ -3,6 +3,7 @@ import Wishlist from '@models/Wishlist';
 import Product from '@models/Product';
 import { asyncHandler } from '@utils/asyncHandler';
 import { AppError } from '@utils/AppError';
+import { logActivity } from '@services/activity.service';
 
 async function getOrCreateWishlist(userId: string) {
   let wishlist = await Wishlist.findOne({ user: userId });
@@ -28,6 +29,13 @@ export const addToWishlist = asyncHandler(async (req: Request, res: Response) =>
   if (!wishlist.products.some((p) => String(p) === productId)) {
     wishlist.products.push(product._id as never);
     await wishlist.save();
+    void logActivity({
+      user: req.user!.id,
+      type: 'added_to_wishlist',
+      description: `Added "${product.title}" to wishlist`,
+      entityType: 'product',
+      entityId: String(productId),
+    });
   }
   await wishlist.populate('products', 'title slug images price rating stock');
 

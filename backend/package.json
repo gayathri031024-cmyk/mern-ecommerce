@@ -35,9 +35,10 @@
     "mongoose": "^8.9.3",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^9.0.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.7.5",
     "@types/cookie-parser": "^1.4.8",
@@ -48,8 +49,6 @@
     "@types/multer": "^1.4.12",
     "@types/node": "^22.10.2",
     "@types/nodemailer": "^6.4.17",
-    "@eslint/js": "^9.18.0",
-    "typescript-eslint": "^8.19.1",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
@@ -57,10 +56,11 @@
     "lint-staged": "^15.3.0",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
+    "ts-node-dev": "^2.0.0",
     "tsc-alias": "^1.8.10",
     "tsconfig-paths": "^4.2.0",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.1"
   },
   "lint-staged": {
     "src/**/*.ts": [

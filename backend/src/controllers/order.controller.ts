@@ -8,6 +8,10 @@ import { ROLES } from '@constants/roles';
 import { asyncHandler } from '@utils/asyncHandler';
 import { AppError } from '@utils/AppError';
 import { getPagination, buildMeta, buildSort } from '@utils/queryHelpers';
+import { createNotification } from '@services/notification.service';
+import { logActivity } from '@services/activity.service';
+import { sendOrderConfirmationEmail, sendOrderStatusUpdateEmail } from '@services/email.service';
+import { logger } from '@utils/logger';
 
 const SORTABLE_FIELDS = ['createdAt', 'total', 'status'];
 const FLAT_SHIPPING_FEE = 5;
@@ -91,6 +95,27 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   cart.items = [] as never;
   await cart.save();
 
+  // Side effects (notification, activity log, email) never block or fail the order response.
+  void createNotification({
+    user: userId,
+    type: 'order_placed',
+    title: 'Order placed',
+    message: `Your order ${order.orderNumber} has been placed successfully.`,
+    link: `/orders/${order.id}`,
+  });
+  void logActivity({
+    user: userId,
+    type: 'placed_order',
+    description: `Placed order ${order.orderNumber}`,
+    entityType: 'order',
+    entityId: order.id,
+  });
+  sendOrderConfirmationEmail(user.email, user.name, {
+    orderNumber: order.orderNumber,
+    total: order.total,
+    items: order.items.map((i) => ({ title: i.title, quantity: i.quantity, unitPrice: i.unitPrice })),
+  }).catch((error) => logger.error('Failed to send order confirmation email', error));
+
   res.status(201).json({ success: true, message: 'Order placed successfully', data: order });
 });
 
@@ -161,6 +186,28 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
   order.status = status;
   if (note) order.statusHistory[order.statusHistory.length - 1].note = note;
   await order.save();
+
+  const customer = await User.findById(order.user);
+  if (customer) {
+    void createNotification({
+      user: String(order.user),
+      type: 'order_status',
+      title: 'Order status updated',
+      message: `Order ${order.orderNumber} is now ${status}.`,
+      link: `/orders/${order.id}`,
+    });
+    void logActivity({
+      user: String(order.user),
+      type: 'order_status_changed',
+      description: `Order ${order.orderNumber} changed to ${status}`,
+      entityType: 'order',
+      entityId: order.id,
+    });
+    sendOrderStatusUpdateEmail(customer.email, customer.name, {
+      orderNumber: order.orderNumber,
+      status,
+    }).catch((error) => logger.error('Failed to send order status update email', error));
+  }
 
   res.status(200).json({ success: true, message: 'Order status updated', data: order });
 });

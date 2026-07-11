@@ -57,19 +57,16 @@ export function useAuth() {
 /** Runs once on app boot to hydrate the session from the httpOnly refresh cookie. */
 export function useAuthInit() {
   const [initializing, setInitializing] = useState(true);
-  const { setUser, accessToken, logout } = useAuthStore();
+  const { setSession, logout } = useAuthStore();
 
   useEffect(() => {
     let cancelled = false;
 
     async function hydrate() {
-      if (!accessToken) {
-        setInitializing(false);
-        return;
-      }
       try {
-        const me = await authService.me();
-        if (!cancelled) setUser(me);
+        const { accessToken } = await authService.refresh();
+        const user = await authService.me();
+        if (!cancelled) setSession(user, accessToken);
       } catch {
         if (!cancelled) logout();
       } finally {
@@ -81,7 +78,6 @@ export function useAuthInit() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { initializing };

@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { ApiRequestError } from '@lib/axios';
+import axios from 'axios';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -8,7 +8,7 @@ export const queryClient = new QueryClient({
       retry: (failureCount, error) => {
         // Don't retry 4xx client errors (bad request, not found, etc.) -
         // retrying won't help and just delays the error surfacing to the UI.
-        if (error instanceof ApiRequestError && error.statusCode && error.statusCode < 500) {
+        if (axios.isAxiosError(error) && error.response && error.response.status < 500) {
           return false;
         }
         return failureCount < 2;

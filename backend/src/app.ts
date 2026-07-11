@@ -1,4 +1,5 @@
 import express, { Application } from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -28,6 +29,17 @@ app.use(
   }),
 );
 app.use(requestLogger);
+
+app.use(
+  '/uploads',
+  express.static(path.join(process.cwd(), 'uploads'), {
+    setHeaders: (res) => {
+      // Helmet defaults to same-origin CORP, which blocks <img> loads from the
+      // frontend's dev origin. Uploaded images are public assets, so relax it.
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    },
+  }),
+);
 
 app.use('/health', healthRoutes);
 app.use('/api', apiRoutes);

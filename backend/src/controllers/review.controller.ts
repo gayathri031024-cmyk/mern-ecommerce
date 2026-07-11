@@ -6,6 +6,7 @@ import { ROLES } from '@constants/roles';
 import { asyncHandler } from '@utils/asyncHandler';
 import { AppError } from '@utils/AppError';
 import { getPagination, buildMeta, buildSort } from '@utils/queryHelpers';
+import { logActivity } from '@services/activity.service';
 
 const SORTABLE_FIELDS = ['createdAt', 'rating'];
 
@@ -47,6 +48,14 @@ export const createReview = asyncHandler(async (req: Request, res: Response) => 
     rating,
     comment,
     isVerifiedPurchase: Boolean(hasPurchased),
+  });
+
+  void logActivity({
+    user: userId,
+    type: 'wrote_review',
+    description: `Wrote a ${rating}-star review`,
+    entityType: 'product',
+    entityId: productId,
   });
 
   res.status(201).json({ success: true, message: 'Review submitted successfully', data: review });
