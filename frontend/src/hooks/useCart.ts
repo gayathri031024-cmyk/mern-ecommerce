@@ -52,11 +52,24 @@ export function useCart() {
     },
   });
 
-  return {
+ return {
     cart: cartQuery.data,
     isLoading: cartQuery.isLoading,
-    addItem: addItem.mutateAsync,
-    updateItem: updateItem.mutateAsync,
-    removeItem: removeItem.mutateAsync,
+    // These are fired-and-forgotten from click handlers (ProductCard, CartItem,
+    // ProductDetailPage) rather than awaited. We use `.mutateAsync` here (not
+    // `.mutate`) specifically so we can attach an explicit `.catch(noop)` to
+    // the real returned promise ourselves — the failure is still reported to
+    // the user via the `onError` toasts configured above, this just
+    // guarantees the promise itself is always marked handled so a rejection
+    // can never surface as an unhandled promise rejection.
+    addItem: (variables: { productId: string; quantity?: number }) => {
+      addItem.mutateAsync(variables).catch(() => undefined);
+    },
+    updateItem: (variables: { productId: string; quantity: number }) => {
+      updateItem.mutateAsync(variables).catch(() => undefined);
+    },
+    removeItem: (productId: string) => {
+      removeItem.mutateAsync(productId).catch(() => undefined);
+    },
   };
 }
