@@ -64,6 +64,12 @@ export function useAuthInit() {
 
     async function hydrate() {
       try {
+        // Warm-up request: guarantees the XSRF-TOKEN cookie is set by
+        // issueCsrfCookie before we attempt the CSRF-protected refresh call.
+        // Expected to 401 if there's no valid access token yet — that's fine,
+        // we only need the cookie side-effect, not this call to succeed.
+        await authService.me().catch(() => undefined);
+    
         const { accessToken } = await authService.refresh();
         const user = await authService.me();
         if (!cancelled) setSession(user, accessToken);
@@ -73,7 +79,6 @@ export function useAuthInit() {
         if (!cancelled) setInitializing(false);
       }
     }
-
     hydrate();
     return () => {
       cancelled = true;

@@ -4,7 +4,8 @@ import axios from 'axios';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000, // 1 minute
+      staleTime: 60 * 1000, // 1 minute - data is considered fresh, no refetch on remount
+      gcTime: 10 * 60 * 1000, // 10 minutes - unused cache entries stay around for fast back/forward nav
       retry: (failureCount, error) => {
         // Don't retry 4xx client errors (bad request, not found, etc.) -
         // retrying won't help and just delays the error surfacing to the UI.

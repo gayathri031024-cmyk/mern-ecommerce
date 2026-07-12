@@ -2,6 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { env } from '@config/env';
 import { authenticate } from '@middlewares/auth.middleware';
+import { verifyCsrfToken } from '@middlewares/csrf.middleware';
 import {
   validateRegister,
   validateLogin,
@@ -35,8 +36,8 @@ const sensitiveLimiter = rateLimit({
 
 router.post('/register', sensitiveLimiter, validateRegister, register);
 router.post('/login', sensitiveLimiter, validateLogin, login);
-router.post('/logout', logout);
-router.post('/refresh', refresh);
+router.post('/logout', verifyCsrfToken, logout);
+router.post('/refresh', verifyCsrfToken, refresh);
 router.get('/me', authenticate, me);
 
 router.post('/forgot-password', sensitiveLimiter, validateForgotPassword, forgotPassword);
@@ -44,6 +45,11 @@ router.post('/reset-password', sensitiveLimiter, validateResetPassword, resetPas
 
 router.post('/verify-email', validateVerifyEmail, verifyEmail);
 router.get('/verify-email', validateVerifyEmail, verifyEmail);
-router.post('/resend-verification', sensitiveLimiter, validateResendVerification, resendVerificationEmail);
+router.post(
+  '/resend-verification',
+  sensitiveLimiter,
+  validateResendVerification,
+  resendVerificationEmail,
+);
 
 export default router;

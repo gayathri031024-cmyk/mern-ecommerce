@@ -22,7 +22,7 @@ function setRefreshCookie(res: Response, token: string): void {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
-    domain: env.COOKIE_DOMAIN,
+    ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
     path: REFRESH_COOKIE_PATH,
     maxAge: durationToMs(env.JWT_REFRESH_EXPIRES_IN),
   });
@@ -33,13 +33,17 @@ function clearRefreshCookie(res: Response): void {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
-    domain: env.COOKIE_DOMAIN,
+    ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
     path: REFRESH_COOKIE_PATH,
   });
 }
 
 async function issueSession(res: Response, user: InstanceType<typeof User>) {
-  const accessToken = signAccessToken({ sub: user.id as string, role: user.role, email: user.email });
+  const accessToken = signAccessToken({
+    sub: user.id as string,
+    role: user.role,
+    email: user.email,
+  });
   const refreshToken = signRefreshToken({ sub: user.id as string });
 
   user.setRefreshToken(refreshToken);
@@ -180,7 +184,9 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
   await user.save();
 
   clearRefreshCookie(res);
-  res.status(200).json({ success: true, message: 'Password reset successfully. Please sign in again.' });
+  res
+    .status(200)
+    .json({ success: true, message: 'Password reset successfully. Please sign in again.' });
 });
 
 export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {

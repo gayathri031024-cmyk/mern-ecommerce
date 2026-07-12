@@ -32,6 +32,7 @@ export function LoginPage() {
       <h1 className="text-center text-xl font-semibold">Sign in to your account</h1>
       <Input
         label="Email"
+        name="email"
         type="email"
         value={email}
         onChange={(event) => setEmail(event.target.value)}
@@ -40,6 +41,7 @@ export function LoginPage() {
       />
       <Input
         label="Password"
+        name="password"
         type="password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}

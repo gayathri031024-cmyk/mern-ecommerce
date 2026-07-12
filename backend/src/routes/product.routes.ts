@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authenticate, authorize } from '@middlewares/auth.middleware';
 import { ROLES } from '@constants/roles';
 import { validateObjectIdParam, validateBulkIds } from '@validators/common.validator';
+import { cacheGet, bustCacheOnMutation } from '@middlewares/cache.middleware';
 import {
   validateCreateProduct,
   validateUpdateProduct,
@@ -20,9 +21,15 @@ import {
 
 const router = Router();
 
-router.get('/', getProducts);
-router.get('/slug/:slug', getProductBySlug);
-router.get('/:id', validateObjectIdParam(), getProductById);
+// Product catalog changes infrequently relative to how often it's browsed,
+// so short-TTL caching cuts DB load significantly under traffic. Any
+// mutation below busts the whole prefix so shoppers never see stale data
+// for more than a few seconds after an admin/vendor edit.
+router.use(bustCacheOnMutation('/api/products'));
+
+router.get('/', cacheGet(30), getProducts);
+router.get('/slug/:slug', cacheGet(60), getProductBySlug);
+router.get('/:id', validateObjectIdParam(), cacheGet(60), getProductById);
 
 router.post(
   '/',

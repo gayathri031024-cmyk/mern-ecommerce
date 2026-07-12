@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'url';
@@ -36,6 +37,29 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    // Sourcemaps are handy for prod debugging but add build time/size;
+    // browsers only fetch them on demand from devtools, so they're free at runtime.
     sourcemap: true,
+    // Splitting stable, rarely-changing dependencies into their own chunk
+    // means the browser can cache them across deploys — a release that
+    // only touches app code won't invalidate the vendor chunk's cache entry.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-query': ['@tanstack/react-query', '@tanstack/react-query-devtools', 'axios'],
+          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'vendor-ui': ['framer-motion', 'lucide-react', 'react-hot-toast'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.ts'],
+    css: true,
+    exclude: ['node_modules', 'dist'],
   },
 });

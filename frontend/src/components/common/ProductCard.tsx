@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -9,10 +10,10 @@ import { useWishlistStore } from '@/store/wishlistStore';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { cn } from '@/utils/cn';
 
-export function ProductCard({ product }: { product: Product }) {
+function ProductCardComponent({ product }: { product: Product }) {
   const { addItem } = useCart();
-  const { toggle, isWishlisted } = useWishlistStore();
-  const wishlisted = isWishlisted(product.id);
+  const toggle = useWishlistStore((state) => state.toggle);
+  const wishlisted = useWishlistStore((state) => state.productIds.includes(product.id));
   const onSale = Boolean(product.compareAtPrice && product.compareAtPrice > product.price);
 
   return (
@@ -67,3 +68,5 @@ export function ProductCard({ product }: { product: Product }) {
     </div>
   );
 }
+
+export const ProductCard = memo(ProductCardComponent);

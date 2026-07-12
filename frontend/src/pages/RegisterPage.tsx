@@ -34,11 +34,18 @@ export function RegisterPage() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       <h1 className="text-center text-xl font-semibold">Create your account</h1>
-      <Input label="Full name" value={name} onChange={(event) => setName(event.target.value)} required />
+      <Input
+        label="Full name"
+        name="name"
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        required
+      />
       <Input
         label="Email"
+        name="email"
         type="email"
         value={email}
         onChange={(event) => setEmail(event.target.value)}
@@ -47,6 +54,7 @@ export function RegisterPage() {
       />
       <Input
         label="Password"
+        name="password"
         type="password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}
@@ -56,6 +64,7 @@ export function RegisterPage() {
       />
       <Input
         label="Confirm password"
+        name="confirmPassword"
         type="password"
         value={confirmPassword}
         onChange={(event) => setConfirmPassword(event.target.value)}

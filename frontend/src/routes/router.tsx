@@ -1,36 +1,84 @@
+
+import { lazy, Suspense, ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
 import { MainLayout } from '@components/layout/MainLayout';
 import { AuthLayout } from '@components/layout/AuthLayout';
 import { AdminLayout } from '@components/layout/AdminLayout';
 import { RouteErrorBoundary } from '@components/common/RouteErrorBoundary';
+import { PageLoader } from '@components/common/PageLoader';
 
 import { ProtectedRoute } from './ProtectedRoute';
 import { AdminRoute } from './AdminRoute';
 import { GuestRoute } from './GuestRoute';
 
-import { HomePage } from '@pages/HomePage';
-import { ProductListPage } from '@pages/ProductListPage';
-import { ProductDetailPage } from '@pages/ProductDetailPage';
-import { CartPage } from '@pages/CartPage';
-import { CheckoutPage } from '@pages/CheckoutPage';
-import { OrderSuccessPage } from '@pages/OrderSuccessPage';
-import { OrdersPage } from '@pages/OrdersPage';
-import { OrderDetailPage } from '@pages/OrderDetailPage';
-import { WishlistPage } from '@pages/WishlistPage';
-import { ProfilePage } from '@pages/ProfilePage';
-import { LoginPage } from '@pages/LoginPage';
-import { RegisterPage } from '@pages/RegisterPage';
-import { ForgotPasswordPage } from '@pages/ForgotPasswordPage';
-import { ResetPasswordPage } from '@pages/ResetPasswordPage';
-import { VerifyEmailPage } from '@pages/VerifyEmailPage';
-import { NotFoundPage } from '@pages/NotFoundPage';
+/**
+ * Every storefront/auth/admin page is code-split into its own chunk via
+ * `lazy()`, so the initial bundle only ships the shell (layouts, router,
+ * providers) plus whichever page the visitor actually lands on. React
+ * Router only requests a page's chunk the moment its route is matched.
+ */
+const HomePage = lazy(() => import('@pages/HomePage').then((m) => ({ default: m.HomePage })));
+const ProductListPage = lazy(() =>
+  import('@pages/ProductListPage').then((m) => ({ default: m.ProductListPage })),
+);
+const ProductDetailPage = lazy(() =>
+  import('@pages/ProductDetailPage').then((m) => ({ default: m.ProductDetailPage })),
+);
+const CartPage = lazy(() => import('@pages/CartPage').then((m) => ({ default: m.CartPage })));
+const CheckoutPage = lazy(() =>
+  import('@pages/CheckoutPage').then((m) => ({ default: m.CheckoutPage })),
+);
+const OrderSuccessPage = lazy(() =>
+  import('@pages/OrderSuccessPage').then((m) => ({ default: m.OrderSuccessPage })),
+);
+const OrdersPage = lazy(() => import('@pages/OrdersPage').then((m) => ({ default: m.OrdersPage })));
+const OrderDetailPage = lazy(() =>
+  import('@pages/OrderDetailPage').then((m) => ({ default: m.OrderDetailPage })),
+);
+const WishlistPage = lazy(() =>
+  import('@pages/WishlistPage').then((m) => ({ default: m.WishlistPage })),
+);
+const ProfilePage = lazy(() =>
+  import('@pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
+);
+const LoginPage = lazy(() => import('@pages/LoginPage').then((m) => ({ default: m.LoginPage })));
+const RegisterPage = lazy(() =>
+  import('@pages/RegisterPage').then((m) => ({ default: m.RegisterPage })),
+);
+const ForgotPasswordPage = lazy(() =>
+  import('@pages/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })),
+);
+const ResetPasswordPage = lazy(() =>
+  import('@pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })),
+);
+const VerifyEmailPage = lazy(() =>
+  import('@pages/VerifyEmailPage').then((m) => ({ default: m.VerifyEmailPage })),
+);
+const NotFoundPage = lazy(() =>
+  import('@pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
+);
 
-import { AdminDashboardPage } from '@pages/admin/AdminDashboardPage';
-import { AdminProductsPage } from '@pages/admin/AdminProductsPage';
-import { AdminProductFormPage } from '@pages/admin/AdminProductFormPage';
-import { AdminOrdersPage } from '@pages/admin/AdminOrdersPage';
-import { AdminUsersPage } from '@pages/admin/AdminUsersPage';
+const AdminDashboardPage = lazy(() =>
+  import('@pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })),
+);
+const AdminProductsPage = lazy(() =>
+  import('@pages/admin/AdminProductsPage').then((m) => ({ default: m.AdminProductsPage })),
+);
+const AdminProductFormPage = lazy(() =>
+  import('@pages/admin/AdminProductFormPage').then((m) => ({ default: m.AdminProductFormPage })),
+);
+const AdminOrdersPage = lazy(() =>
+  import('@pages/admin/AdminOrdersPage').then((m) => ({ default: m.AdminOrdersPage })),
+);
+const AdminUsersPage = lazy(() =>
+  import('@pages/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })),
+);
+
+/** Wraps a lazy page element with the shared Suspense fallback. */
+function withSuspense(element: ReactNode) {
+  return <Suspense fallback={<PageLoader />}>{element}</Suspense>;
+}
 
 /**
  * Central route tree. Every page in `src/pages` is wired up here, grouped
@@ -42,20 +90,20 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     errorElement: <RouteErrorBoundary />,
     children: [
-      { index: true, element: <HomePage /> },
-      { path: 'products', element: <ProductListPage /> },
-      { path: 'products/:slug', element: <ProductDetailPage /> },
-      { path: 'cart', element: <CartPage /> },
-      { path: 'wishlist', element: <WishlistPage /> },
+      { index: true, element: withSuspense(<HomePage />) },
+      { path: 'products', element: withSuspense(<ProductListPage />) },
+      { path: 'products/:slug', element: withSuspense(<ProductDetailPage />) },
+      { path: 'cart', element: withSuspense(<CartPage />) },
+      { path: 'wishlist', element: withSuspense(<WishlistPage />) },
 
       {
         element: <ProtectedRoute />,
         children: [
-          { path: 'checkout', element: <CheckoutPage /> },
-          { path: 'order-success', element: <OrderSuccessPage /> },
-          { path: 'orders', element: <OrdersPage /> },
-          { path: 'orders/:id', element: <OrderDetailPage /> },
-          { path: 'profile', element: <ProfilePage /> },
+          { path: 'checkout', element: withSuspense(<CheckoutPage />) },
+          { path: 'order-success', element: withSuspense(<OrderSuccessPage />) },
+          { path: 'orders', element: withSuspense(<OrdersPage />) },
+          { path: 'orders/:id', element: withSuspense(<OrderDetailPage />) },
+          { path: 'profile', element: withSuspense(<ProfilePage />) },
         ],
       },
     ],
@@ -67,10 +115,10 @@ export const router = createBrowserRouter([
       {
         element: <AuthLayout />,
         children: [
-          { path: 'login', element: <LoginPage /> },
-          { path: 'register', element: <RegisterPage /> },
-          { path: 'forgot-password', element: <ForgotPasswordPage /> },
-          { path: 'reset-password', element: <ResetPasswordPage /> },
+          { path: 'login', element: withSuspense(<LoginPage />) },
+          { path: 'register', element: withSuspense(<RegisterPage />) },
+          { path: 'forgot-password', element: withSuspense(<ForgotPasswordPage />) },
+          { path: 'reset-password', element: withSuspense(<ResetPasswordPage />) },
         ],
       },
     ],
@@ -79,7 +127,7 @@ export const router = createBrowserRouter([
     path: 'verify-email',
     element: <AuthLayout />,
     errorElement: <RouteErrorBoundary />,
-    children: [{ index: true, element: <VerifyEmailPage /> }],
+    children: [{ index: true, element: withSuspense(<VerifyEmailPage />) }],
   },
   {
     path: 'admin',
@@ -89,20 +137,19 @@ export const router = createBrowserRouter([
       {
         element: <AdminLayout />,
         children: [
-          { index: true, element: <AdminDashboardPage /> },
-          { path: 'products', element: <AdminProductsPage /> },
-          { path: 'products/new', element: <AdminProductFormPage /> },
-          { path: 'products/:id/edit', element: <AdminProductFormPage /> },
-          { path: 'orders', element: <AdminOrdersPage /> },
-          { path: 'users', element: <AdminUsersPage /> },
+          { index: true, element: withSuspense(<AdminDashboardPage />) },
+          { path: 'products', element: withSuspense(<AdminProductsPage />) },
+          { path: 'products/new', element: withSuspense(<AdminProductFormPage />) },
+          { path: 'products/:id/edit', element: withSuspense(<AdminProductFormPage />) },
+          { path: 'orders', element: withSuspense(<AdminOrdersPage />) },
+          { path: 'users', element: withSuspense(<AdminUsersPage />) },
         ],
       },
     ],
   },
   {
     path: '*',
-    element: <NotFoundPage />,
+    element: withSuspense(<NotFoundPage />),
     errorElement: <RouteErrorBoundary />,
   },
 ]);
-

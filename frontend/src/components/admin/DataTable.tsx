@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { memo, ReactNode } from 'react';
 
 export interface DataTableColumn<T> {
   header: string;
@@ -13,7 +13,7 @@ interface DataTableProps<T> {
   emptyMessage?: string;
 }
 
-export function DataTable<T>({ columns, rows, rowKey, emptyMessage = 'No records found.' }: DataTableProps<T>) {
+function DataTableComponent<T>({ columns, rows, rowKey, emptyMessage = 'No records found.' }: DataTableProps<T>) {
   if (rows.length === 0) {
     return <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-ink/50">{emptyMessage}</div>;
   }
@@ -45,3 +45,7 @@ export function DataTable<T>({ columns, rows, rowKey, emptyMessage = 'No records
     </div>
   );
 }
+
+// memo() erases generics, so we cast the memoized component back to the
+// original generic function signature for callers.
+export const DataTable = memo(DataTableComponent) as typeof DataTableComponent;

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -5,7 +6,7 @@ import { CartItem as CartItemType } from '@/types';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { useCart } from '@/hooks/useCart';
 
-export function CartItem({ item }: { item: CartItemType }) {
+function CartItemComponent({ item }: { item: CartItemType }) {
   const { updateItem, removeItem } = useCart();
 
   return (
@@ -15,6 +16,7 @@ export function CartItem({ item }: { item: CartItemType }) {
           src={item.product.images[0]?.url ?? '/placeholder-product.svg'}
           alt={item.product.title}
           className="h-full w-full object-cover"
+          loading="lazy"
         />
       </Link>
 
@@ -60,3 +62,5 @@ export function CartItem({ item }: { item: CartItemType }) {
     </div>
   );
 }
+
+export const CartItem = memo(CartItemComponent);

@@ -45,6 +45,7 @@ export function CheckoutPage() {
             <h2 className="text-lg font-semibold">Shipping address</h2>
             <Input
               label="Saved address ID"
+              name="shippingAddressId"
               placeholder="e.g. addr_123"
               value={shippingAddressId}
               onChange={(event) => setShippingAddressId(event.target.value)}

@@ -49,7 +49,16 @@ export const env: EnvConfig = {
   JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET as string,
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-  COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || 'localhost',
+  // Deliberately no 'localhost' fallback: a cookie's `domain` attribute is only
+  // meaningful when sharing it across subdomains (production). Left empty,
+  // res.cookie()/res.clearCookie() omit the attribute and the cookie becomes
+  // "host-only" — scoped to whichever host actually issued it. That's what you
+  // want in dev/test, where requests may hit `localhost`, `127.0.0.1`, or a
+  // supertest ephemeral server bound to either. An explicit domain here caused
+  // cookies to silently stop round-tripping whenever the request host didn't
+  // literally match the configured string (e.g. supertest -> 127.0.0.1 vs
+  // domain: 'localhost').
+  COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || '',
 
   SMTP_HOST: process.env.SMTP_HOST || '',
   SMTP_PORT: Number(process.env.SMTP_PORT) || 587,

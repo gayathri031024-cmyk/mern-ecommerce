@@ -10,11 +10,26 @@ export const axiosInstance = axios.create({
   timeout: 15000,
 });
 
+/** Reads a cookie value by name (used for the double-submit CSRF token). */
+function readCookie(name: string): string | undefined {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
 axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN);
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // The backend double-submit-checks this header against the non-httpOnly
+  // XSRF-TOKEN cookie on /auth/refresh and /auth/logout. Harmless to send
+  // on every request; only those two routes actually verify it.
+  const csrfToken = readCookie('XSRF-TOKEN');
+  if (csrfToken && config.headers) {
+    config.headers['X-CSRF-Token'] = csrfToken;
+  }
+
   return config;
 });
 
@@ -62,7 +77,7 @@ axiosInstance.interceptors.response.use(
         const { data } = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL ?? '/api'}/auth/refresh`,
           {},
-          { withCredentials: true },
+          { withCredentials: true, headers: { 'X-CSRF-Token': readCookie('XSRF-TOKEN') ?? '' } },
         );
         storage.set(STORAGE_KEYS.ACCESS_TOKEN, data.data.accessToken);
         settleQueue(null);
@@ -79,3 +94,4 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
