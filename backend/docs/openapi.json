@@ -1,0 +1,316 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+      "title": "MERN E-Commerce API",
+      "version": "1.0.0",
+      "description": "REST API for the MERN e-commerce project. All endpoints are mounted under `/api` except `/health`, which is mounted at the root.\n\n**Auth model:** short-lived JWT access tokens are sent as a `Bearer` header on every authenticated request. A long-lived refresh token lives in an httpOnly cookie and is only used by `POST /auth/refresh` and `POST /auth/logout`. Those two routes also require a `X-CSRF-Token` header matching the readable `XSRF-TOKEN` cookie (double-submit CSRF protection), since they're the only routes a forged cross-site request could otherwise trigger without a Bearer token."
+    },
+    "servers": [
+      { "url": "http://localhost:5000/api", "description": "Local dev" }
+    ],
+    "tags": [
+      { "name": "Health" },
+      { "name": "Auth" },
+      { "name": "Users" },
+      { "name": "Products" },
+      { "name": "Categories" },
+      { "name": "Reviews" },
+      { "name": "Cart" },
+      { "name": "Orders" },
+      { "name": "Wishlist" },
+      { "name": "Notifications" },
+      { "name": "Activity" },
+      { "name": "Bookmarks" },
+      { "name": "Upload" },
+      { "name": "Admin" }
+    ],
+    "components": {
+      "securitySchemes": {
+        "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" },
+        "csrfToken": { "type": "apiKey", "in": "header", "name": "X-CSRF-Token" }
+      },
+      "schemas": {
+        "SuccessResponse": {
+          "type": "object",
+          "properties": {
+            "success": { "type": "boolean", "example": true },
+            "message": { "type": "string" },
+            "data": {}
+          }
+        },
+        "ErrorResponse": {
+          "type": "object",
+          "properties": {
+            "success": { "type": "boolean", "example": false },
+            "message": { "type": "string" }
+          }
+        },
+        "PaginatedResponse": {
+          "type": "object",
+          "properties": {
+            "success": { "type": "boolean", "example": true },
+            "data": {
+              "type": "object",
+              "properties": {
+                "items": { "type": "array", "items": {} },
+                "meta": {
+                  "type": "object",
+                  "properties": {
+                    "page": { "type": "integer" },
+                    "limit": { "type": "integer" },
+                    "total": { "type": "integer" },
+                    "totalPages": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "Unauthorized": {
+          "description": "Missing/invalid access token",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+        },
+        "Forbidden": {
+          "description": "Authenticated but not permitted (wrong role, or missing/invalid CSRF token)",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+        },
+        "NotFound": {
+          "description": "Resource not found",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+        },
+        "ValidationError": {
+          "description": "Request failed validation",
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+        }
+      }
+    },
+    "paths": {
+      "/health": {
+        "get": {
+          "tags": ["Health"],
+          "summary": "API + DB health check",
+          "servers": [{ "url": "http://localhost:5000" }],
+          "responses": { "200": { "description": "Healthy" }, "503": { "description": "Degraded (DB disconnected)" } }
+        }
+      },
+      "/auth/register": {
+        "post": {
+          "tags": ["Auth"], "summary": "Register a new account", "security": [],
+          "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["name", "email", "password"], "properties": { "name": { "type": "string" }, "email": { "type": "string", "format": "email" }, "password": { "type": "string", "minLength": 8 } } } } } },
+          "responses": { "201": { "description": "Account created" }, "400": { "$ref": "#/components/responses/ValidationError" }, "409": { "description": "Email already registered" } }
+        }
+      },
+      "/auth/login": {
+        "post": {
+          "tags": ["Auth"], "summary": "Log in", "security": [],
+          "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["email", "password"], "properties": { "email": { "type": "string" }, "password": { "type": "string" } } } } } },
+          "responses": { "200": { "description": "Logged in; sets XSRF-TOKEN and refreshToken cookies, returns access token" }, "401": { "description": "Invalid credentials" } }
+        }
+      },
+      "/auth/logout": {
+        "post": {
+          "tags": ["Auth"], "summary": "Log out (clears refresh cookie)", "security": [{ "csrfToken": [] }],
+          "responses": { "200": { "description": "Logged out" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+        }
+      },
+      "/auth/refresh": {
+        "post": {
+          "tags": ["Auth"], "summary": "Exchange the refresh cookie for a new access token", "security": [{ "csrfToken": [] }],
+          "responses": { "200": { "description": "New access token issued" }, "401": { "description": "Missing/invalid/expired refresh cookie" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+        }
+      },
+      "/auth/me": {
+        "get": {
+          "tags": ["Auth"], "summary": "Get the current authenticated user", "security": [{ "bearerAuth": [] }],
+          "responses": { "200": { "description": "Current user" }, "401": { "$ref": "#/components/responses/Unauthorized" } }
+        }
+      },
+      "/auth/forgot-password": {
+        "post": {
+          "tags": ["Auth"], "summary": "Request a password reset email", "security": [],
+          "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "email": { "type": "string" } } } } } },
+          "responses": { "200": { "description": "Always 200 with a generic message, whether or not the account exists (prevents email enumeration)" } }
+        }
+      },
+      "/auth/reset-password": {
+        "post": {
+          "tags": ["Auth"], "summary": "Reset password using the emailed token", "security": [],
+          "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" }, "password": { "type": "string" } } } } } },
+          "responses": { "200": { "description": "Password updated" }, "400": { "description": "Invalid/expired token" } }
+        }
+      },
+      "/auth/verify-email": {
+        "get": {
+          "tags": ["Auth"], "summary": "Verify email via link (token in query string)", "security": [],
+          "parameters": [{ "name": "token", "in": "query", "required": true, "schema": { "type": "string" } }],
+          "responses": { "200": { "description": "Email verified" }, "400": { "description": "Invalid/expired token" } }
+        },
+        "post": {
+          "tags": ["Auth"], "summary": "Verify email via token in body", "security": [],
+          "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" } } } } } },
+          "responses": { "200": { "description": "Email verified" }, "400": { "description": "Invalid/expired token" } }
+        }
+      },
+      "/auth/resend-verification": {
+        "post": {
+          "tags": ["Auth"], "summary": "Resend the verification email", "security": [],
+          "responses": { "200": { "description": "Sent (if the account exists and isn't already verified)" } }
+        }
+      },
+      "/users/me": {
+        "get": { "tags": ["Users"], "summary": "Get my profile", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Profile" } } },
+        "patch": { "tags": ["Users"], "summary": "Update my profile", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Updated" } } }
+      },
+      "/users/me/addresses": {
+        "post": { "tags": ["Users"], "summary": "Add a saved address", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Address added" } } }
+      },
+      "/users/me/addresses/{addressId}": {
+        "patch": { "tags": ["Users"], "summary": "Update a saved address", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "addressId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Updated" } } },
+        "delete": { "tags": ["Users"], "summary": "Remove a saved address", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "addressId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Removed" } } }
+      },
+      "/users": {
+        "get": { "tags": ["Users"], "summary": "List all users (admin only)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Paginated list of users" }, "403": { "$ref": "#/components/responses/Forbidden" } } }
+      },
+      "/users/{id}": {
+        "get": { "tags": ["Users"], "summary": "Get a user by id (admin only)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "User" }, "404": { "$ref": "#/components/responses/NotFound" } } },
+        "delete": { "tags": ["Users"], "summary": "Delete a user (admin only)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Deleted" } } }
+      },
+      "/users/{id}/role": {
+        "patch": { "tags": ["Users"], "summary": "Change a user's role (admin only)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Role updated" } } }
+      },
+      "/products": {
+        "get": { "tags": ["Products"], "summary": "List products (cached 30s, filterable/paginated)", "security": [], "responses": { "200": { "description": "Paginated list of products" } } },
+        "post": { "tags": ["Products"], "summary": "Create a product (admin/vendor)", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" }, "403": { "$ref": "#/components/responses/Forbidden" } } }
+      },
+      "/products/slug/{slug}": {
+        "get": { "tags": ["Products"], "summary": "Get a product by slug (cached 60s)", "security": [], "parameters": [{ "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Product" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+      },
+      "/products/{id}": {
+        "get": { "tags": ["Products"], "summary": "Get a product by id (cached 60s)", "security": [], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Product" }, "404": { "$ref": "#/components/responses/NotFound" } } },
+        "patch": { "tags": ["Products"], "summary": "Update a product (admin/vendor)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Updated" } } },
+        "delete": { "tags": ["Products"], "summary": "Delete a product (admin/vendor)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Deleted" } } }
+      },
+      "/products/bulk-delete": {
+        "post": { "tags": ["Products"], "summary": "Bulk delete products (admin/vendor)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Deleted" } } }
+      },
+      "/products/bulk-stock": {
+        "patch": { "tags": ["Products"], "summary": "Bulk update stock levels (admin/vendor)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Updated" } } }
+      },
+      "/categories": {
+        "get": { "tags": ["Categories"], "summary": "List categories (cached 120s)", "security": [], "responses": { "200": { "description": "Categories" } } },
+        "post": { "tags": ["Categories"], "summary": "Create a category (admin only)", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+      },
+      "/categories/{id}": {
+        "get": { "tags": ["Categories"], "summary": "Get a category by id (cached 120s)", "security": [], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Category" } } },
+        "patch": { "tags": ["Categories"], "summary": "Update a category (admin only)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Updated" } } },
+        "delete": { "tags": ["Categories"], "summary": "Delete a category (admin only)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Deleted" } } }
+      },
+      "/categories/bulk-delete": {
+        "post": { "tags": ["Categories"], "summary": "Bulk delete categories (admin only)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Deleted" } } }
+      },
+      "/reviews/product/{productId}": {
+        "get": { "tags": ["Reviews"], "summary": "Get reviews for a product", "security": [], "parameters": [{ "name": "productId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Reviews" } } }
+      },
+      "/reviews": {
+        "post": { "tags": ["Reviews"], "summary": "Create a review", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+      },
+      "/reviews/{id}": {
+        "patch": { "tags": ["Reviews"], "summary": "Update my review", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Updated" } } },
+        "delete": { "tags": ["Reviews"], "summary": "Delete my review", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Deleted" } } }
+      },
+      "/reviews/bulk-delete": {
+        "post": { "tags": ["Reviews"], "summary": "Bulk delete reviews (admin only)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Deleted" } } }
+      },
+      "/cart": {
+        "get": { "tags": ["Cart"], "summary": "Get my cart", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Cart" } } },
+        "delete": { "tags": ["Cart"], "summary": "Clear my cart", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Cleared" } } }
+      },
+      "/cart/items": {
+        "post": { "tags": ["Cart"], "summary": "Add an item to my cart", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Item added" } } }
+      },
+      "/cart/items/{productId}": {
+        "patch": { "tags": ["Cart"], "summary": "Update quantity of a cart item", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "productId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Updated" } } },
+        "delete": { "tags": ["Cart"], "summary": "Remove an item from my cart", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "productId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Removed" } } }
+      },
+      "/cart/merge": {
+        "post": { "tags": ["Cart"], "summary": "Merge a guest/local cart into my account cart on login", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Merged" } } }
+      },
+      "/orders/admin": {
+        "get": { "tags": ["Orders"], "summary": "List all orders (admin only)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Orders" } } }
+      },
+      "/orders/bulk-status": {
+        "patch": { "tags": ["Orders"], "summary": "Bulk update order status (admin only)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Updated" } } }
+      },
+      "/orders": {
+        "get": { "tags": ["Orders"], "summary": "Get my orders", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Orders" } } },
+        "post": { "tags": ["Orders"], "summary": "Place an order", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+      },
+      "/orders/{id}": {
+        "get": { "tags": ["Orders"], "summary": "Get an order by id", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Order" } } },
+        "delete": { "tags": ["Orders"], "summary": "Delete an order (admin only)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Deleted" } } }
+      },
+      "/orders/{id}/status": {
+        "patch": { "tags": ["Orders"], "summary": "Update order status (admin only)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Updated" } } }
+      },
+      "/orders/{id}/cancel": {
+        "patch": { "tags": ["Orders"], "summary": "Cancel my order", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Cancelled" } } }
+      },
+      "/wishlist": {
+        "get": { "tags": ["Wishlist"], "summary": "Get my wishlist", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Wishlist" } } },
+        "delete": { "tags": ["Wishlist"], "summary": "Clear my wishlist", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Cleared" } } }
+      },
+      "/wishlist/bulk-add": {
+        "post": { "tags": ["Wishlist"], "summary": "Bulk add products to my wishlist", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Added" } } }
+      },
+      "/wishlist/{productId}": {
+        "post": { "tags": ["Wishlist"], "summary": "Add a product to my wishlist", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "productId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Added" } } },
+        "delete": { "tags": ["Wishlist"], "summary": "Remove a product from my wishlist", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "productId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Removed" } } }
+      },
+      "/notifications": {
+        "get": { "tags": ["Notifications"], "summary": "Get my notifications (paginated, includes unreadCount)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Notifications" } } }
+      },
+      "/notifications/read-all": {
+        "patch": { "tags": ["Notifications"], "summary": "Mark all my notifications as read", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Updated" } } }
+      },
+      "/notifications/{id}/read": {
+        "patch": { "tags": ["Notifications"], "summary": "Mark one notification as read", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Updated" } } }
+      },
+      "/notifications/{id}": {
+        "delete": { "tags": ["Notifications"], "summary": "Delete a notification", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Deleted" } } }
+      },
+      "/activity": {
+        "get": { "tags": ["Activity"], "summary": "Get my recent activity feed (paginated)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Activity" } } },
+        "delete": { "tags": ["Activity"], "summary": "Clear my activity history", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Cleared" } } }
+      },
+      "/bookmarks": {
+        "get": { "tags": ["Bookmarks"], "summary": "Get my bookmarks", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Bookmarks" } } }
+      },
+      "/bookmarks/{productId}": {
+        "post": { "tags": ["Bookmarks"], "summary": "Bookmark a product", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "productId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Bookmarked" } } },
+        "delete": { "tags": ["Bookmarks"], "summary": "Remove a bookmark", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "productId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Removed" } } }
+      },
+      "/upload/image": {
+        "post": { "tags": ["Upload"], "summary": "Upload a single image (avatars, one-off uploads)", "security": [{ "bearerAuth": [] }], "requestBody": { "content": { "multipart/form-data": { "schema": { "type": "object", "properties": { "image": { "type": "string", "format": "binary" } } } } } }, "responses": { "200": { "description": "Uploaded" } } }
+      },
+      "/upload/images": {
+        "post": { "tags": ["Upload"], "summary": "Upload up to 10 images (admin/vendor, product galleries)", "security": [{ "bearerAuth": [] }], "requestBody": { "content": { "multipart/form-data": { "schema": { "type": "object", "properties": { "images": { "type": "array", "items": { "type": "string", "format": "binary" } } } } } } }, "responses": { "200": { "description": "Uploaded" }, "403": { "$ref": "#/components/responses/Forbidden" } } }
+      },
+      "/upload/{filename}": {
+        "delete": { "tags": ["Upload"], "summary": "Delete an uploaded file from disk (admin/vendor)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "filename", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Deleted" } } }
+      },
+      "/admin/stats": {
+        "get": { "tags": ["Admin"], "summary": "Dashboard stats: totals, orders by status, revenue by day, top products", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Stats" }, "403": { "$ref": "#/components/responses/Forbidden" } } }
+      },
+      "/admin/export/orders": {
+        "get": { "tags": ["Admin"], "summary": "Export orders as CSV", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "status", "in": "query", "required": false, "schema": { "type": "string" } }], "responses": { "200": { "description": "CSV file stream" } } }
+      },
+      "/admin/export/products": {
+        "get": { "tags": ["Admin"], "summary": "Export products as CSV", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "category", "in": "query", "required": false, "schema": { "type": "string" } }], "responses": { "200": { "description": "CSV file stream" } } }
+      },
+      "/admin/export/users": {
+        "get": { "tags": ["Admin"], "summary": "Export users as CSV", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "role", "in": "query", "required": false, "schema": { "type": "string" } }], "responses": { "200": { "description": "CSV file stream" } } }
+      }
+    }
+  }
