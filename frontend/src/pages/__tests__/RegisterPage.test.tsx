@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -101,7 +101,7 @@ describe('RegisterPage (integration)', () => {
     await user.type(screen.getByLabelText(/confirm password/i), 'short');
     await user.click(screen.getByRole('button', { name: /create account/i }));
 
-    expect(await screen.findByText(/at least 8 characters/i)).toBeInTheDocument();
+    expect(await screen.findByText(/password must be at least 8 characters/i)).toBeInTheDocument();
     expect(mockedAuthService.register).not.toHaveBeenCalled();
   });
 

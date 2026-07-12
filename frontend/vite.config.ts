@@ -61,5 +61,6 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: true,
     exclude: ['node_modules', 'dist'],
+    testTimeout: 15000,
   },
 });

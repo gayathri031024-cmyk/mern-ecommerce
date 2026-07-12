@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { cartService } from '@/services/cartService';
 import { queryKeys } from '@/lib/queryClient';
@@ -32,6 +32,9 @@ export function useCart() {
       invalidate();
       showToast({ title: 'Added to cart', variant: 'success' });
     },
+    onError: () => {
+      showToast({ title: 'Could not add to cart', variant: 'error' });
+    },
   });
 
   const updateItem = useMutation({
@@ -58,7 +61,7 @@ export function useCart() {
     // These are fired-and-forgotten from click handlers (ProductCard, CartItem,
     // ProductDetailPage) rather than awaited. We use `.mutateAsync` here (not
     // `.mutate`) specifically so we can attach an explicit `.catch(noop)` to
-    // the real returned promise ourselves — the failure is still reported to
+    // the real returned promise ourselves â€” the failure is still reported to
     // the user via the `onError` toasts configured above, this just
     // guarantees the promise itself is always marked handled so a rejection
     // can never surface as an unhandled promise rejection.
