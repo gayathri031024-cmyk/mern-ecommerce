@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+﻿import crypto from 'crypto';
 import { Request, Response } from 'express';
 import User from '@models/User';
 import { asyncHandler } from '@utils/asyncHandler';
@@ -21,7 +21,7 @@ function setRefreshCookie(res: Response, token: string): void {
   res.cookie(REFRESH_COOKIE_NAME, token, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: isProduction ? 'none' : 'lax',
     ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
     path: REFRESH_COOKIE_PATH,
     maxAge: durationToMs(env.JWT_REFRESH_EXPIRES_IN),
@@ -32,7 +32,7 @@ function clearRefreshCookie(res: Response): void {
   res.clearCookie(REFRESH_COOKIE_NAME, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: isProduction ? 'none' : 'lax',
     ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
     path: REFRESH_COOKIE_PATH,
   });

@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+﻿import crypto from 'crypto';
 import { NextFunction, Request, Response } from 'express';
 import { isProduction, env } from '@config/env';
 import { AppError } from '@utils/AppError';
@@ -27,7 +27,7 @@ export function issueCsrfCookie(req: Request, res: Response, next: NextFunction)
     res.cookie(CSRF_COOKIE_NAME, token, {
       httpOnly: false,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: isProduction ? 'none' : 'lax',
       ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
       path: '/',
       maxAge: durationToMs(env.JWT_REFRESH_EXPIRES_IN),
