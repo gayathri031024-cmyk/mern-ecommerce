@@ -155,6 +155,4 @@ Deeper docs live in [`docs/`](docs):
 - [`FOLDER_STRUCTURE.md`](docs/FOLDER_STRUCTURE.md) — where to find and add things
 - [`SWAGGER_DOCUMENTATION.md`](docs/SWAGGER_DOCUMENTATION.md) — using the interactive API docs
 
-## License
 
-No license file has been added yet — all rights reserved by default until one is chosen.
